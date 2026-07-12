@@ -29,7 +29,7 @@ from .report_generator import ReportGenerator
 
 from .daily_report import DailyReport
 
-from .workflow import WorkFlowEngine
+from .workflow import WorkflowEngine
 
 from .scheduler import Scheduler
 
@@ -67,7 +67,7 @@ __all__ = [
 
     "DailyReport",
 
-    "WorkFlowEngine",
+    "WorkflowEngine",
 
     "Scheduler",
 
