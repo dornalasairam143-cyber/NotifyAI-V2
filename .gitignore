@@ -1,0 +1,28 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Environment
+.env
+
+# Database
+data/*.db
+
+# Logs
+logs/
+*.log
+
+# Reports
+reports/
+
+# Cache
+cache/
+
+# VS Code
+.vscode/
+
+# OS
+.DS_Store
+Thumbs.db
