@@ -1,65 +1,60 @@
-# GitHub Actions Workflow for NotifyAI V4 Engine Orchestration
-# Automatically runs every 15 minutes or via manual execution (workflow_dispatch).
 name: NotifyAI V4 Engine Workflow
 
 on:
   schedule:
-    # Triggers the workflow every 15 minutes
-    - cron: '*/15 * * * *'
+    - cron: "*/15 * * * *"
   workflow_dispatch:
-    # Enables manual execution via the GitHub Actions dashboard
 
 jobs:
   execute-engine:
-    name: Run Monitor Engine
     runs-on: ubuntu-latest
-    timeout-minutes: 30
 
     steps:
-      # Step 1: Check out the workspace repository code
       - name: Checkout Repository
         uses: actions/checkout@v4
 
-      # Step 2: Establish the precise Python 3.12 runtime environment
-      - name: Set up Python 3.12
+      - name: Set up Python
         uses: actions/setup-python@v5
         with:
-          python-version: '3.12'
-          cache: 'pip'
+          python-version: "3.12"
 
-      # Step 3: Package dependency setup carrying a single-fault tolerance retry block
-      - name: Install Dependencies with Resiliency Retry
+      - name: Install Dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install -r requirements.txt || (echo "::warning::Initial dependency installation failed. Retrying pipeline installation step..." && sleep 5 && pip install -r requirements.txt)
+          pip install -r requirements.txt
 
-      # Step 4: Execute the continuous ingestion and evaluation app engine
+      - name: Download Latest Articles
+  run: |
+    rm -f articles.xlsx
+
+    curl -L \
+      "https://docs.google.com/spreadsheets/d/1HPvUIrri5AHWfBfNOBNQgkV6N9EvpA92/export?format=xlsx" \
+      -o articles.xlsx
+
+    echo "Downloaded file:"
+    ls -lh articles.xlsx
+
+    file articles.xlsx
       - name: Run NotifyAI Engine Application
+        env:
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          TELEGRAM_TOKEN: ${{ secrets.TELEGRAM_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
         run: |
           python app.py
 
-      # Step 5: Secure execution output files, local sqlite instances, and analytical reports
-      - name: Upload Workspace Database and Operational Reports
-        uses: actions/upload-artifact@v4
+      - name: Upload Artifacts
         if: always()
+        uses: actions/upload-artifact@v4
         with:
-          name: notifyai-v4-run-artifacts-${{ github.run_id }}
+          name: notifyai-artifacts
           path: |
-            notify.db
+            data/notify.db
             reports/
             logs/
           if-no-files-found: warn
-          retention-days: 14
 
-      # Step 6: Render an informative execution markdown table straight to GitHub Job Summaries
-      - name: Compile and Display Execution Summary
+      - name: Summary
         if: always()
         run: |
-          echo "## 📊 NotifyAI V4 Operational Run Summary" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "| Execution Parameter | Status / Meta Value |" >> $GITHUB_STEP_SUMMARY
-          echo "| --- | --- |" >> $GITHUB_STEP_SUMMARY
-          echo "| **Engine Pipeline Status** | ${{ job.status == 'success' && '✅ SUCCESS' || '❌ FAILED/CANCELLED' }} |" >> $GITHUB_STEP_SUMMARY
-          echo "| **Trigger Mechanism** | \`${{ github.event_name }}\` |" >> $GITHUB_STEP_SUMMARY
-          echo "| **Workflow Context Attempt** | Run ID #${{ github.run_id }} (Attempt ${{ github.run_attempt }}) |" >> $GITHUB_STEP_SUMMARY
-          echo "| **Execution Timestamp (UTC)** | $(date -u '+%Y-%m-%d %H:%M:%S') |" >> $GITHUB_STEP_SUMMARY
+          echo "Workflow completed." >> $GITHUB_STEP_SUMMARY
