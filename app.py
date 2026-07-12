@@ -165,3 +165,8 @@ class NotifyAI:
 if __name__ == "__main__":
     app = NotifyAI()
     app.run()
+    from core.telegram import TelegramNotifier
+
+bot = TelegramNotifier()
+
+bot.send_message("✅ NotifyAI Test Successful!\n\nRepository is working correctly on GitHub Actions.")
