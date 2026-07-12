@@ -23,6 +23,13 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements.txt
 
+      # Download latest Articles.xlsx from Google Sheets
+      - name: Download Latest Articles
+        run: |
+          rm -f articles.xlsx
+          curl -L "https://docs.google.com/spreadsheets/d/1HPvUIrri5AHWfBfNOBNQgkV6N9EvpA92/export?format=xlsx" -o articles.xlsx
+          ls -lh articles.xlsx
+
       - name: Run NotifyAI Engine Application
         env:
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
